@@ -2,10 +2,10 @@ name: Run Python Script
 
 on:
   schedule:
-    # 08:00 AM IST = 02:30 AM UTC
-    - cron: "30 2 * * *"
-    # 02:35 PM IST = 09:05 AM UTC
-    - cron: "5 9 * * *"
+    # Run at 08:00 IST (02:30 UTC)
+    - cron: '30 2 * * 1-5'
+    # Run at 02:30 PM IST (09:00 UTC)
+    - cron: '0 9 * * 1-5'
   workflow_dispatch:  # allows manual trigger from Actions tab
 
 jobs:
