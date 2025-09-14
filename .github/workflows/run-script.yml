@@ -1,0 +1,25 @@
+name: Run Python Script
+
+on:
+  schedule:
+    # 08:00 AM IST = 02:30 AM UTC
+    - cron: "30 2 * * *"
+    # 02:35 PM IST = 09:05 AM UTC
+    - cron: "5 9 * * *"
+  workflow_dispatch:  # allows manual trigger from GitHub Actions tab
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run Python script
+        run: python myscript.py
