@@ -2,9 +2,11 @@ name: Run Python Script
 
 on:
   schedule:
-    - cron: "30 2 * * *"   # 08:00 AM IST
-    - cron: "5 9 * * *"    # 02:35 PM IST
-  workflow_dispatch:
+    # 08:00 AM IST = 02:30 AM UTC
+    - cron: "30 2 * * *"
+    # 02:35 PM IST = 09:05 AM UTC
+    - cron: "5 9 * * *"
+  workflow_dispatch:  # allows manual trigger from Actions tab
 
 jobs:
   run-script:
@@ -24,13 +26,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Auto-fix formatting
-        run: |
-          pip install autopep8
-          autopep8 --in-place --aggressive --aggressive myscript.py
-
-     - name: Run Python script
-  env:
-    GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
-  run: python myscript.py
-
+      - name: Run Python script
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        run: python myscript.py
