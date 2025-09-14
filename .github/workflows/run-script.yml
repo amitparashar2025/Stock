@@ -30,4 +30,6 @@ jobs:
           autopep8 --in-place --aggressive --aggressive myscript.py
 
       - name: Run Python script
+        env:
+    GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
         run: python myscript.py
