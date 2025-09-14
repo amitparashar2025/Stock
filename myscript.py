@@ -74,12 +74,12 @@ class CompleteStockScreener:
         self.interval_1w = "1wk"
         self.setup()
 
-def setup(self):
-    creds = ServiceAccountCredentials.from_json_keyfile_name(
+    def setup(self):
+        creds = ServiceAccountCredentials.from_json_keyfile_name(
         "service_account.json", scope
     )
-    self.client = gspread.authorize(creds)
-    self.ws = self.client.open(self.sheet).worksheet(self.ws_name)
+        self.client = gspread.authorize(creds)
+        self.ws = self.client.open(self.sheet).worksheet(self.ws_name)
 
 def throttle(self):
         now = time.time()
