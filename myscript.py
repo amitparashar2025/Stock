@@ -41,7 +41,7 @@ Starting from row 4
 
 
 from gspread.exceptions import APIError
-from google.oauth2.service_account import Credentials
+from google.oauth2.service_account import ServiceAccountCredentials
 import gspread
 import yfinance as yf
 import os
