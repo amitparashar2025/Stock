@@ -75,7 +75,7 @@ class CompleteStockScreener:
             'https://spreadsheets.google.com/feeds',
             'https://www.googleapis.com/auth/drive'
         ]
-        creds = Credentials.from_service_account_file(self.creds_file, scopes=scopes)
+        creds = ServiceAccountCredentials.from_json_keyfile_name("service_account.json", scopes)
         client = gspread.authorize(creds)
         self.ws = client.open(self.sheet).worksheet(self.ws_name)
 
