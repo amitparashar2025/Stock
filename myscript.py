@@ -75,13 +75,12 @@ class CompleteStockScreener:
         self.setup()
 
     def setup(self):
+        service_account_info = json.loads(os.environ["GOOGLE_CREDENTIALS"])
         scope = [
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive"
         ]
-        creds = Credentials.from_service_account_file(
-        "service_account.json", scopes=scope
-    )
+        creds = Credentials.from_service_account_info(service_account_info, scopes=scope)
         self.client = gspread.authorize(creds)
         self.ws = self.client.open(self.sheet).worksheet(self.ws_name)
 
