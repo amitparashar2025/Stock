@@ -1,0 +1,5 @@
+pandas
+openpyxl
+numpy
+yfinance
+gspread
