@@ -41,6 +41,10 @@ Starting from row 4
 
 import os, time, logging, warnings
 import pandas as pd, numpy as np
+pip install pandas
+pip install numpy
+pip install yfinance
+pip install gspread
 import yfinance as yf
 import gspread
 from google.oauth2.service_account import Credentials
