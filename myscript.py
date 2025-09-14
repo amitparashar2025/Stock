@@ -1,44 +1,13 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sun Sep 14 16:23:25 2025
-
 @author: amiparas
 """
 
 #!/usr/bin/env python3
 """
 COMPLETE STOCK SCREENER WITH TECHNICAL, FUNDAMENTAL, LIQUIDITY, NEWS & TRIPLE TIMEFRAME ANALYSIS (4H, 1D, 1W)
-Fetches 4H, 1D, and 1W data, fundamental ratios, latest news, and updates Google Sheets:
-- B: 20EMA (4H)
-- C: 50SMA (4H)
-- D: 200SMA (4H)
-- E: Dynamic Support/Resistance (4H)
-- F: Trend Recommendation (4H)
-- G: RSI Divergence (4H)
-- H: MACD Crossover (4H)
-- I: Combined RSI & MACD (4H)
-- J: OBV (4H)
-- K: VWAP (4H)
-- L: Bollinger Bands (20,2) (4H)
-- M: Combined OBV+VWAP+MACD (4H)
-- N: Stochastic Oscillator (14,3) (4H)
-- O: Fibonacci Retracement (4H)
-- P: Alligator Recommendation (4H)
-- Q: ROE Recommendation
-- R: P/E Ratio Recommendation
-- S: Debt-to-Equity Recommendation
-- T: PEG Ratio Recommendation
-- U: Combined Fundamentals Recommendation
-- V: Current Ratio
-- W: Average Daily Trading Volume (ADTV) (4H data grouped by date)
-- X: Liquidity Recommendation (based on V & W)
-- Y: Final Combined Recommendation (4H)
-- Z: Latest News Headline
-- AA: Final Combined Recommendation (1D)
-- AB: Final Combined Recommendation (1W)
-Starting from row 4
 """
-
 
 from gspread.exceptions import APIError
 from google.oauth2.service_account import Credentials
@@ -49,19 +18,18 @@ import time, logging, warnings
 import pandas as pd
 import numpy as np
 import json
+
 warnings.filterwarnings('ignore')
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[logging.FileHandler(
-        'stock_screener.log'), logging.StreamHandler()]
+    handlers=[logging.FileHandler('stock_screener.log'), logging.StreamHandler()]
 )
 logger = logging.getLogger(__name__)
 
 
 class CompleteStockScreener:
-    def __init__(self, creds_file="service_account.json"):
-        self.creds_file = creds_file
+    def __init__(self):
         self.sheet = "Stock Selection by Python"
         self.ws_name = "Screener"
         self.start_row = 4
@@ -78,14 +46,14 @@ class CompleteStockScreener:
     def setup(self):
         service_account_info = json.loads(os.environ["GOOGLE_CREDENTIALS"])
         scope = [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive"
+            "https://www.googleapis.com/auth/spreadsheets",
+            "https://www.googleapis.com/auth/drive"
         ]
         creds = Credentials.from_service_account_info(service_account_info, scopes=scope)
         self.client = gspread.authorize(creds)
         self.ws = self.client.open(self.sheet).worksheet(self.ws_name)
 
-def throttle(self):
+    def throttle(self):
         now = time.time()
         if now - self.last_reset >= 60:
             self.requests = 0
@@ -95,12 +63,11 @@ def throttle(self):
             self.requests = 0
             self.last_reset = time.time()
 
-def safe_batch_update(self, updates):
+    def safe_batch_update(self, updates):
         delay = 1
         for _ in range(5):
             try:
-                self.ws.batch_update(
-                    updates, value_input_option='USER_ENTERED')
+                self.ws.batch_update(updates, value_input_option='USER_ENTERED')
                 return
             except APIError as e:
                 if '429' in str(e):
@@ -110,17 +77,16 @@ def safe_batch_update(self, updates):
                     raise
         logger.error("Batch update failed after retries")
 
-def get_symbols(self):
+    def get_symbols(self):
         vals = self.ws.col_values(1)
         return [{'symbol': v.strip().upper(), 'row': i}
                 for i, v in enumerate(vals[self.start_row - 1:], start=self.start_row) if v.strip()]
 
-def fetch_data(self, sym, interval):
+    def fetch_data(self, sym, interval):
         for _ in range(3):
             try:
                 self.throttle()
-                df = yf.Ticker(sym).history(
-                    period=self.period, interval=interval)
+                df = yf.Ticker(sym).history(period=self.period, interval=interval)
                 self.requests += 1
                 min_len = 200 if interval == self.interval_4h else 50
                 if df.empty or len(df) < min_len:
@@ -131,7 +97,7 @@ def fetch_data(self, sym, interval):
                 time.sleep(2)
         return None
 
-def fetch_fundamentals(self, sym):
+    def fetch_fundamentals(self, sym):
         try:
             info = yf.Ticker(sym).info
             return (
@@ -144,7 +110,7 @@ def fetch_fundamentals(self, sym):
         except:
             return (None, None, None, None, None)
 
-def fetch_latest_news(self, sym):
+    def fetch_latest_news(self, sym):
         try:
             self.throttle()
             news = yf.Ticker(sym).news
@@ -155,7 +121,7 @@ def fetch_latest_news(self, sym):
             pass
         return "No recent news available"
 
-def calculate(self, df):
+    def calculate(self, df):
         c, h, l, v = df['Close'], df['High'], df['Low'], df['Volume']
         ema20 = c.ewm(span=20, adjust=False).mean().iloc[-1]
         sma50 = c.rolling(50).mean().iloc[-1] if len(c) >= 50 else c.mean()
@@ -168,8 +134,7 @@ def calculate(self, df):
         sig = macd.ewm(span=9).mean()
         obv = (np.sign(c.diff()) * v).fillna(0).cumsum().iloc[-1]
         tp = (h + l + c) / 3
-        vwap = (tp * v).rolling(len(df)
-                                ).sum().iloc[-1] / v.rolling(len(df)).sum().iloc[-1]
+        vwap = (tp * v).rolling(len(df)).sum().iloc[-1] / v.rolling(len(df)).sum().iloc[-1]
         mb = c.rolling(20).mean()
         sd = c.rolling(20).std()
         ub, lb = mb + 2 * sd, mb - 2 * sd
@@ -205,7 +170,8 @@ def calculate(self, df):
             'adtv': adtv
         }
 
-def rec_sr_trend(self, df):
+    # --- recommendation methods (rec_xxx) ---
+    def rec_sr_trend(self, df):
         c = df['Close'].iloc[-1]
         e20 = df['Close'].ewm(span=20).mean().iloc[-1]
         pct = abs(c - e20) / e20 * 100 if e20 else 0
@@ -226,7 +192,7 @@ def rec_sr_trend(self, df):
                 trend = "🔴 DOWNTREND"
         return sr, trend
 
-def rec_rsi_div(self, df):
+    def rec_rsi_div(self, df):
         if len(df) < 2:
             return "🟡 No divergence"
         c = df['Close']
@@ -239,11 +205,10 @@ def rec_rsi_div(self, df):
             return "🟢 Bullish divergence"
         return "🟡 No divergence"
 
-def rec_macd(self, df):
+    def rec_macd(self, df):
         if len(df) < 2:
             return "🟡 No MACD"
-        macd = df['Close'].ewm(span=12).mean() - \
-            df['Close'].ewm(span=26).mean()
+        macd = df['Close'].ewm(span=12).mean() - df['Close'].ewm(span=26).mean()
         sig = macd.ewm(span=9).mean()
         d0, d1 = macd.iloc[-1] - sig.iloc[-1], macd.iloc[-2] - sig.iloc[-2]
         if d1 <= 0 < d0:
@@ -252,31 +217,31 @@ def rec_macd(self, df):
             return "🔴 MACD Bearish"
         return "🟡 No MACD"
 
-def rec_rsi_macd(self, rsi, macd_rec):
+    def rec_rsi_macd(self, rsi, macd_rec):
         if "Bullish" in macd_rec and rsi > 50:
             return "🟢 Strong buy"
         if "Bearish" in macd_rec and rsi < 50:
             return "🔴 Strong sell"
         return "🟡 Neutral"
 
-def rec_obv(self, obv):
+    def rec_obv(self, obv):
         return "🟢 Bullish OBV" if obv > 0 else "🔴 Bearish OBV" if obv < 0 else "🟡 Neutral OBV"
 
-def rec_vwap(self, close, vwap):
+    def rec_vwap(self, close, vwap):
         if close > vwap:
             return "🟢 Above VWAP"
         if close < vwap:
             return "🔴 Below VWAP"
         return "🟡 At VWAP"
 
-def rec_boll(self, close, ub, lb):
+    def rec_boll(self, close, ub, lb):
         if close >= ub:
             return "🔴 Overbought BB"
         if close <= lb:
             return "🟢 Oversold BB"
         return "🟡 Within BB"
 
-def rec_comb_obv_vwap_macd(self, obv_rec, vwap_rec, macd_rec):
+    def rec_comb_obv_vwap_macd(self, obv_rec, vwap_rec, macd_rec):
         b = sum("🟢" in x for x in [obv_rec, vwap_rec, macd_rec])
         r = sum("🔴" in x for x in [obv_rec, vwap_rec, macd_rec])
         if b == 3:
@@ -293,7 +258,7 @@ def rec_comb_obv_vwap_macd(self, obv_rec, vwap_rec, macd_rec):
             return "🟡 MODERATE SELL"
         return "🟡 MIXED"
 
-def rec_stoch(self, pctK, pctD):
+    def rec_stoch(self, pctK, pctD):
         if pctK > 80 and pctD > 80:
             return "🔴 Overbought Stoch"
         if pctK < 20 and pctD < 20:
@@ -304,19 +269,19 @@ def rec_stoch(self, pctK, pctD):
             return "🔴 Stoch falling"
         return "🟡 Stoch neutral"
 
-def rec_fib(self, fib_pct):
+    def rec_fib(self, fib_pct):
         lvl = ("23.6%" if fib_pct <= 23.6 else "38.2%" if fib_pct <= 38.2 else
                "50%" if fib_pct <= 50 else "61.8%" if fib_pct <= 61.8 else "78.6%")
         return f"{fib_pct:.1f}% near {lvl}"
 
-def rec_alligator(self, lips, teeth, jaws):
+    def rec_alligator(self, lips, teeth, jaws):
         if lips > teeth > jaws:
             return "🟢 Alligator awake (uptrend)"
         if lips < teeth < jaws:
             return "🔴 Alligator asleep (downtrend)"
         return "🟡 Alligator inactive"
 
-def rec_roe(self, roe):
+    def rec_roe(self, roe):
         if roe is None:
             return "No ROE data"
         pct = roe * 100
@@ -326,7 +291,7 @@ def rec_roe(self, roe):
             return "🟡 ROE 5–15%"
         return "🔴 ROE <5%"
 
-def rec_pe(self, pe):
+    def rec_pe(self, pe):
         if pe is None:
             return "No P/E data"
         if pe < 15:
@@ -335,7 +300,7 @@ def rec_pe(self, pe):
             return "🟡 P/E 15–25"
         return "🔴 P/E >25"
 
-def rec_de(self, de):
+    def rec_de(self, de):
         if de is None:
             return "No D/E data"
         if de < 1:
@@ -344,7 +309,7 @@ def rec_de(self, de):
             return "🟡 D/E 1–2"
         return "🔴 D/E >2"
 
-def rec_peg(self, peg):
+    def rec_peg(self, peg):
         if peg is None:
             return "No PEG data"
         if peg < 1:
@@ -353,7 +318,7 @@ def rec_peg(self, peg):
             return "🟡 PEG ~1"
         return "🔴 PEG >1.5"
 
-def rec_comb_fundamental(self, roe_rec, pe_rec, de_rec, peg_rec):
+    def rec_comb_fundamental(self, roe_rec, pe_rec, de_rec, peg_rec):
         bullish = sum("🟢" in x for x in [roe_rec, pe_rec, de_rec, peg_rec])
         bearish = sum("🔴" in x for x in [roe_rec, pe_rec, de_rec, peg_rec])
         if bullish == 4:
@@ -370,7 +335,7 @@ def rec_comb_fundamental(self, roe_rec, pe_rec, de_rec, peg_rec):
             return "🟡 MODERATELY WEAK"
         return "🟡 MIXED FUNDAMENTALS"
 
-def rec_current_ratio(self, cr):
+    def rec_current_ratio(self, cr):
         if cr is None:
             return "No Current Ratio data"
         if cr > 1.5:
@@ -379,7 +344,7 @@ def rec_current_ratio(self, cr):
             return "🟡 Moderate Liquidity"
         return "🔴 Poor Liquidity"
 
-def rec_adtv(self, adtv):
+    def rec_adtv(self, adtv):
         if not adtv:
             return "No Volume data"
         if adtv > 1e6:
@@ -388,7 +353,7 @@ def rec_adtv(self, adtv):
             return "🟡 Moderate Volume"
         return "🔴 Low Volume"
 
-def rec_liquidity(self, cr_rec, adtv_rec):
+    def rec_liquidity(self, cr_rec, adtv_rec):
         if "🟢" in cr_rec and "🟢" in adtv_rec:
             return "🟢 Strong Liquidity"
         if "🔴" in cr_rec and "🔴" in adtv_rec:
@@ -397,12 +362,12 @@ def rec_liquidity(self, cr_rec, adtv_rec):
             return "🟡 Moderate Liquidity"
         return "🟡 Moderate Liquidity"
 
-def score_sentiment(self, text):
+    def score_sentiment(self, text):
         if not isinstance(text, str):
             return 0
         return text.count("🟢") - text.count("🔴")
 
-def rec_final(self, *recs):
+    def rec_final(self, *recs):
         total = sum(self.score_sentiment(r) for r in recs)
         if total > 6:
             return "🟢 STRONG BUY"
@@ -414,7 +379,7 @@ def rec_final(self, *recs):
             return "🔴 SELL"
         return "🔴 STRONG SELL"
 
-def calc_timeframe_rec(self, df, fund_comb, liquidity):
+    def calc_timeframe_rec(self, df, fund_comb, liquidity):
         if df is None or len(df) < 20:
             return "🟡 INSUFFICIENT DATA"
         v = self.calculate(df)
@@ -431,7 +396,7 @@ def calc_timeframe_rec(self, df, fund_comb, liquidity):
         all_rec = self.rec_alligator(v['lips'], v['teeth'], v['jaws'])
         return self.rec_final(trend, rmacd, comb_ovm, stoch, fib, all_rec, fund_comb, liquidity)
 
-def process(self):
+    def process(self):
         symbols = self.get_symbols()
         updates, success, fail = [], 0, 0
         for idx, info in enumerate(symbols, 1):
@@ -458,13 +423,11 @@ def process(self):
                 pe_rec = self.rec_pe(pe)
                 de_rec = self.rec_de(de)
                 peg_rec = self.rec_peg(peg)
-                fund_comb = self.rec_comb_fundamental(
-                    roe_rec, pe_rec, de_rec, peg_rec)
+                fund_comb = self.rec_comb_fundamental(roe_rec, pe_rec, de_rec, peg_rec)
                 cr_rec = self.rec_current_ratio(cr)
                 adtv_rec = self.rec_adtv(v4['adtv'])
                 liq_rec = self.rec_liquidity(cr_rec, adtv_rec)
-                final4 = self.rec_final(
-                    trend4, rmacd4, comb4, stoch4, fib4, all4, fund_comb, liq_rec)
+                final4 = self.rec_final(trend4, rmacd4, comb4, stoch4, fib4, all4, fund_comb, liq_rec)
                 news = self.fetch_latest_news(sym)
                 rec1 = self.calc_timeframe_rec(df1, fund_comb, liq_rec)
                 recw = self.calc_timeframe_rec(dfw, fund_comb, liq_rec)
@@ -489,8 +452,7 @@ def process(self):
                     {'range': f'S{row}', 'values': [[de_rec]]},
                     {'range': f'T{row}', 'values': [[peg_rec]]},
                     {'range': f'U{row}', 'values': [[fund_comb]]},
-                    {'range': f'V{row}', 'values': [
-                        [round(cr, 2) if cr else "N/A"]]},
+                    {'range': f'V{row}', 'values': [[round(cr, 2) if cr else "N/A"]]},
                     {'range': f'W{row}', 'values': [[int(v4["adtv"])]]},
                     {'range': f'X{row}', 'values': [[liq_rec]]},
                     {'range': f'Y{row}', 'values': [[final4]]},
@@ -501,19 +463,14 @@ def process(self):
                 success += 1
             else:
                 for col in list('BCDEFGHIJKLMNO') + ['P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB']:
-                    updates.append(
-                        {'range': f'{col}{row}', 'values': [['NO DATA']]})
+                    updates.append({'range': f'{col}{row}', 'values': [['NO DATA']]})
                 fail += 1
         print()
         if updates:
             self.safe_batch_update(updates)
         print(f"\n✅ Done: {success} succeeded, {fail} failed")
 
+
 if __name__ == '__main__':
-    creds = "service_account.json"
-    if not os.path.exists(creds):
-        logger.error(
-            "❌ Credentials file missing at default location: service_account.json")
-        exit(1)
     logger.info("Running stock screener without user prompts...")
     CompleteStockScreener().process()
