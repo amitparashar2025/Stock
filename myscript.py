@@ -71,12 +71,9 @@ class CompleteStockScreener:
         self.setup()
 
     def setup(self):
-        scopes = [
-            'https://spreadsheets.google.com/feeds',
-            'https://www.googleapis.com/auth/drive'
-        ]
-        creds = ServiceAccountCredentials.from_json_keyfile_name("service_account.json", scopes)
-        client = gspread.authorize(creds)
+       scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+creds = ServiceAccountCredentials.from_json_keyfile_name("service_account.json", scope)
+client = gspread.authorize(creds)
         self.ws = client.open(self.sheet).worksheet(self.ws_name)
 
     def throttle(self):
