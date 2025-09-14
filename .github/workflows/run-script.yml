@@ -24,9 +24,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Create service_account.json
-        run: echo '${{ secrets.GOOGLE_CREDENTIALS }}' > service_account.json
+      - name: Auto-fix formatting
+        run: |
+          pip install autopep8
+          autopep8 --in-place --aggressive --aggressive myscript.py
 
       - name: Run Python script
         run: python myscript.py
-
