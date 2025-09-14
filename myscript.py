@@ -516,4 +516,4 @@ if __name__ == '__main__':
             "❌ Credentials file missing at default location: service_account.json")
         exit(1)
     logger.info("Running stock screener without user prompts...")
-    CompleteStockScreener(creds).process()
+    CompleteStockScreener().process()
