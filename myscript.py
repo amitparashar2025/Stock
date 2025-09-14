@@ -41,7 +41,7 @@ Starting from row 4
 
 
 from gspread.exceptions import APIError
-from google.oauth2.service_account import ServiceAccountCredentials
+from google.oauth2.service_account import Credentials
 import gspread
 import yfinance as yf
 import os
@@ -75,7 +75,7 @@ class CompleteStockScreener:
         self.setup()
 
     def setup(self):
-        creds = ServiceAccountCredentials.from_json_keyfile_name(
+        creds = Credentials.from_json_keyfile_name(
         "service_account.json", scope
     )
         self.client = gspread.authorize(creds)
